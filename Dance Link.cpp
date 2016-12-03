@@ -21,7 +21,7 @@
 #define drep(i, a, b) for(int i = a; i >= b; i--)
 using namespace std;
 const double pi = acos(-1.), eps = 1e-6;
-const int                   Maxn=5010,Maxm=2500000,Mo=1e9 + 7,oo=INT_MAX >> 1;
+const int                   Maxn=20010,Maxm=2500000,Mo=1e9 + 7,oo=INT_MAX >> 1;
 const int sp[4][2] = {{-1,0},{0,1},{1,0},{0,-1}};
 int T;
 using namespace std;
@@ -68,6 +68,7 @@ struct DanceLink{
 			pre = c[i];
 			c[i]->u = c[i]->d = c[i];
 		}
+
 		pre  -> r = Head;
 		Head -> l = pre;
 		// sort(v, v + vcnt); //if input is disored, sort it
@@ -79,6 +80,7 @@ struct DanceLink{
 			vi -> d = c[y];
 			c[y] -> u = vi;
 			c[y] -> cnt ++;
+			
 			if (i == 0 || x != v[i-1].x)
 				vi -> l = vi -> r = vi;
 			else{
@@ -134,52 +136,59 @@ struct DanceLink{
 	}	
 };
 struct Sudoku{
+	int msz, sz;
 	DanceLink DLX;
-	Sudoku(){Init();}
-	void Init(){DLX.Init(729,324);}
-	void Build(int mp[][9]){
+	Sudoku(int _msz){Init(_msz);}
+	void Init(int _msz){
+		msz = _msz;
+		sz = msz * msz;
+		DLX.Init(sz * sz * sz,sz * sz * 4);
+	}
+	void Build(int mp[][9]){//change second dimensino to sz
 		int k;
-		rep(i,0,8) rep(j,0,8){			
-			int id = i * 9 + j;
-			if(mp[i][j]){
-				k = mp[i][j] - 1;
-				int line = id * 9 + k;
-				DLX.add(line, id);
-				DLX.add(line, 81  + i * 9 + k);
-				DLX.add(line, 162 + j * 9 + k);
-				DLX.add(line, 243 + (i / 3 * 3 + j / 3) * 9 + k);
-			}			
-			else{
-				rep(k,0,8) {
-					int line = id * 9 + k;
+		int szA = sz * sz;
+		for(int i = 0; i < sz; i++)
+			for (int j = 0; j < sz; j++){
+				int id = i * sz + j;
+				if(mp[i][j]){
+					k = mp[i][j] - 1;
+					int line = id * sz + k;
 					DLX.add(line, id);
-					DLX.add(line, 81  + i * 9 + k);
-					DLX.add(line, 162 + j * 9 + k);
-					DLX.add(line, 243 + (i / 3 * 3 + j / 3) * 9 + k);
+					DLX.add(line, szA + i * sz + k);
+					DLX.add(line, szA * 2 + j * sz + k);
+					DLX.add(line, szA * 3 + (i / msz * msz + j / msz) * sz + k);
+				}			
+				else{
+					for (int k = 0; k < sz; k++) {
+						int line = id * sz + k;
+						DLX.add(line, id);
+						DLX.add(line, szA + i * sz + k);
+						DLX.add(line, szA * 2 + j * sz + k);
+						DLX.add(line, szA * 3 + (i / msz * msz + j / msz) * sz + k);
+					}
 				}
-			}
 		}
 		DLX.Build();
 	}
-	bool Solve(int mp[][9]){
+	bool Solve(int mp[][9]){//change second dimensino to sz
 		if (!DLX.Solve()) return 0;
 		rep(i,1,DLX.ans[0]){
-			int num = DLX.ans[i] % 9;
-			DLX.ans[i] /= 9;
-			int x = DLX.ans[i] / 9, y = DLX.ans[i] % 9;
+			int num = DLX.ans[i] % sz;
+			DLX.ans[i] /= sz;
+			int x = DLX.ans[i] / sz, y = DLX.ans[i] % sz;
 			mp[x][y] = num + 1;
 		}
 		return 1;
 	}
-	
-}sudoku;
+};
 int mp[9][9];
 string st;
 int main(){
+	Sudoku sudoku(3);
 	while(cin >> st, st != "end"){	
 		rep(i,0,8) rep(j,0,8)
 			mp[i][j] = st[i * 9 + j] == '.'?0:st[i * 9 + j] - '0';
-		sudoku.Init();
+		sudoku.Init(3);
 		sudoku.Build(mp);
 		if (!sudoku.Solve(mp))
 			printf("impossible");
